@@ -1,0 +1,36 @@
+#b_canvas {
+    display: block;
+    position: relative;
+    width: 1200px;
+    height: 600px;
+    border: 1px dotted red;
+}
+
+
+#b_container_lines {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    stroke: #bc130b;
+    stroke-width: 4px;
+}
+
+
+.b_item_draggable {
+    postion: absolute;
+    width: 100px;
+    height: 100px;
+    background-color: rgba(200, 211, 255, 0.50);
+}
+
+
+.b_button_newLine {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background-color: #47cf73;
+    border-radius: 4px;
+    bottom: -10px;
+    left: 50%;
+    transform: translate(-50%, 0);
+}
