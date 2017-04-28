@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<?php require_once('head.php'); ?><!DOCTYPE html>
 <html lang="en">
 <head>
     <title>S</title>
@@ -10,7 +10,7 @@
     <!--[if IE]>
     <link rel="shortcut icon" type="image/x-icon" href="favicon.ico"/><![endif]-->
     <link rel="stylesheet" type="text/css" href="css/changr.css">
-    <link rel="stylesheet" type="text/css" href="css/style2.css">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
     <script src="js/jquery.min.js"></script>
     <script src="js/jquery-ui.min.js"></script>
 </head>
@@ -20,20 +20,40 @@
 </noscript>
 
 <div id="b_canvas">
-
     <svg id="b_container_lines"></svg>
-
-    <div class="b_item_draggable" data-id="1">1
-        <div class="b_button_newLine"></div>
-    </div>
-
-    <div class="b_item_draggable" data-id="2">2
-        <div class="b_button_newLine"></div>
-    </div>
 </div>
 
 <script type="text/javascript">
+
+    var items = <?= $items; ?>;
+
     jQuery(document).ready(function ($) {
+
+
+        //Init items & links on canvas
+        var countItems = Object.keys(items).length;
+        $.each(items, function (itemId, itemData) {
+
+            var append = '<div class="b_item_draggable" id="' + itemId + '">' + itemData.name;
+            append += '<div class="b_button_newLine"></div>';
+            append += '</div>';
+
+            $('#b_canvas').append(append);
+            $('#' + itemId).css({position: 'absolute', top: itemData.yPos, left: itemData.xPos});
+
+            countItems--;
+            if (countItems <= 0) {
+
+                $.each(items, function (startItemId, itemData) {
+
+                    $.each(itemData.startLinks, function (k, endItemId) {
+
+                        drawLink($('#' + startItemId), $('#' + endItemId));
+                    });
+                });
+            }
+        });
+
 
         // When dragging an item
         $('.b_item_draggable').draggable({
@@ -42,23 +62,19 @@
 
             drag: function (event, ui) {
 
-                //console.log($(this).attr('data-id'));
+                var objectId = parseInt($(event.target).attr('id'));
 
-                //Todo : update start/end offset of connected lines
+                $.each(items[objectId].startLinks, function (key, data) {
+
+                    drawLink($(event.target), $('#' + data));
+                });
+
+                $.each(items[objectId].endLinks, function (key, data) {
+
+                    drawLink($('#' + data), $(event.target));
+                });
             },
         });
-
-
-        /*
-         var startItemPosition = $(event.target).parent().position();
-         console.log('start ' + startItemPosition);
-
-         var endTargetedPosition = $(event.target).position();
-         console.log('end ' + endTargetedPosition);
-         */
-        // $(this).closest('.boxConnectPoint');
-
-
 
 
         // When dragging the new line button
@@ -80,9 +96,6 @@
                 // Remove temporary line
                 currentDraggedLine.remove();
                 currentDraggedLine = null;
-
-
-                //Todo if dropped in the droppable, (not here) : create permanant line from the middle of the parent element to the middle of next element
             }
         });
 
@@ -94,35 +107,82 @@
 
             drop: function (event, ui) {
 
-                console.log('dropped on '+$(this).attr('data-id'));
-                console.log('button dropped from '+$(ui.draggable).parent().attr('data-id'));
 
-                drawLink($(ui.draggable).parent(), $(this));
 
-                //todo keep track of the lines dropped on each block to be able to update them when dragging block
+                var startObject = $(ui.draggable).parent();
+                var startObjectId = parseInt(startObject.attr('id'));
+
+                var endObject = $(this);
+                var endObjectId = parseInt($(this).attr('id'));
+
+
+                var startLinks = items[startObjectId].startLinks;
+                var countItems = startLinks.length;
+                if (countItems > 0) {
+
+                    $.each(startLinks, function (key, data) {
+
+                        $('#link_' + startObjectId + '_' + data).remove();
+
+                        var endLink = items[data].endLinks.indexOf(parseInt(startObjectId));
+                        if(endLink > -1) {
+                            items[data].endLinks.splice(endLink, 1);
+                        }
+
+                        countItems--;
+                        if (countItems <= 0) {
+
+                            if(startObjectId == endObjectId) {
+                                items[startObjectId].startLinks = [];
+                            }
+                            else {
+
+                                items[startObjectId].startLinks = [endObjectId];
+                                items[endObjectId].endLinks.push(startObjectId);
+                                drawLink(startObject, endObject);
+                            }
+                        }
+                    });
+                }
+                else {
+
+                    items[startObjectId].startLinks = [endObjectId];
+                    items[endObjectId].endLinks.push(startObjectId);
+
+                    drawLink(startObject, endObject);
+                }
             }
         });
-
-
 
 
         var currentDraggedLine = null;
 
         function drawLink(startObject, endObject, temporary = false, customStartPoint = false) {
 
+            var startObjectId = parseInt(startObject.attr('id'));
+            var endObjectId = parseInt(endObject.attr('id'));
 
             if (!temporary || (temporary && currentDraggedLine === null)) {
 
-                var currentLine = $(document.createElementNS('http://www.w3.org/2000/svg', 'line'));
-                $('#b_container_lines').append(currentLine);
+                if ($('#link_' + startObjectId + '_' + endObjectId).length) {
+                    currentLine = $('#link_' + startObjectId + '_' + endObjectId);
+                }
+                else {
 
-                if(temporary) {
+                    var currentLine = $(document.createElementNS('http://www.w3.org/2000/svg', 'line'));
+                    $('#b_container_lines').append(currentLine);
+                }
+
+                if (temporary) {
                     currentDraggedLine = currentLine;
                 }
             }
 
-            if(temporary) {
+            if (temporary) {
                 currentLine = currentDraggedLine;
+            }
+            else {
+                currentLine.attr('id', 'link_' + startObjectId + '_' + endObjectId);
             }
 
 
@@ -130,7 +190,7 @@
             var offset = startObject.offset();
             var centerX = offset.left + startObject.width() / 2;
 
-            if(customStartPoint) {
+            if (customStartPoint) {
                 //starting from new line button place
                 var centerY = offset.top + startObject.height() - 4;
             }
@@ -142,7 +202,6 @@
             // Set start position
             currentLine.attr('x1', centerX);
             currentLine.attr('y1', centerY);
-
 
 
             // Calculating end positions

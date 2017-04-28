@@ -1,0 +1,33 @@
+<?php
+//REMEMBER : don' use php since everything should work offline on the player side)
+$items = '{
+            "1":{
+                "name":"Item1",
+                "xPos":50,
+                "yPos":50,
+                "startLinks":[2],
+                "endLinks":[]
+            },
+            "2":{
+                "name":"Item2",
+                "xPos":250,
+                "yPos":100,
+                "startLinks":[],
+                "endLinks":[1,3]
+            },
+            "3":{
+                "name":"Item3",
+                "xPos":400,
+                "yPos":20,
+                 "startLinks":[2],
+                "endLinks":[]
+            },
+            "4":{
+                "name":"Item4",
+                "xPos":200,
+                "yPos":180,
+                 "startLinks":[],
+                "endLinks":[]
+            }
+        }';
+?>
