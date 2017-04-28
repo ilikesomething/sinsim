@@ -1,0 +1,6 @@
+- We should check that the user doesn't link :
+    - an answer to anything else than a question
+    - an answer to its question
+    - a question to anything else than an answer
+    - a section to anything else than a question
+    - ...

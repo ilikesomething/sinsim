@@ -19,13 +19,27 @@
     <div id="noscript-warning">You need JavaScript to be enabled in order to work properly</div>
 </noscript>
 
-<div id="b_canvas">
-    <svg id="b_container_lines"></svg>
+<header class="topbar">
+    <div class="topbar-container container">
+        <button class="icon icon-topbarmenu object-left"><span></span></button>
+        <div class="topbar-name">
+            <h2>SinSim Builder</h2>
+        </div>
+        <button class="icon icon-topbarlanguage object-right"><span></span></button>
+    </div>
+</header>
+<div class="container padding-top-60">
+    <div id="b_canvas">
+        <svg id="b_container_lines"></svg>
+    </div>
 </div>
 
 <script type="text/javascript">
 
     var items = <?= $items; ?>;
+    var types = {"1": "Section", "2": "Question", "3": "Option"};
+
+    var currentDraggedLine = null;
 
     jQuery(document).ready(function ($) {
 
@@ -34,7 +48,12 @@
         var countItems = Object.keys(items).length;
         $.each(items, function (itemId, itemData) {
 
-            var append = '<div class="b_item_draggable" id="' + itemId + '">' + itemData.name;
+            //add each item
+            var append = '<div class="b_item_draggable" id="' + itemId + '">';
+            append += '<div class="overflowHidden">';
+            append += '<div class="b_item_draggable_header">' + types[itemData.type] + '</div>';
+            append += '<div class="b_item_draggable_content">' + itemData.name + '</div>';
+            append += '</div>';
             append += '<div class="b_button_newLine"></div>';
             append += '</div>';
 
@@ -44,14 +63,61 @@
             countItems--;
             if (countItems <= 0) {
 
+                //when all items are added, we add the links between them
                 $.each(items, function (startItemId, itemData) {
 
                     $.each(itemData.startLinks, function (k, endItemId) {
 
-                        drawLink($('#' + startItemId), $('#' + endItemId));
+                        if( itemData.type != 2) {
+                            $('#' + startItemId).find('.b_button_newLine').hide();
+                        }
+
+                        createLink($('#' + startItemId), $('#' + endItemId));
                     });
                 });
             }
+        });
+
+
+        //Link mouse interactions
+        $('#b_container_lines').on('click', 'line', function () {
+
+            alert('TODO : window to select "Delete this link". For now we are gonna delete it automatically when closing this alert');
+
+            var startObjectId = parseInt($(this).attr('data-startItemId'));
+            var endObjectId = parseInt($(this).attr('data-endItemId'));
+
+            $('#' + startObjectId).find('.b_button_newLine').show();
+            removeLink(startObjectId, endObjectId);
+        });
+
+
+        $('#b_container_lines').on('mouseover', 'line', function () {
+
+            if (currentDraggedLine !== null) {
+                return;
+            }
+
+            $(this).css({'cursor': 'pointer', 'stroke': '#2cbc0f'});
+        });
+
+        $('#b_container_lines').on('mouseout', 'line', function () {
+
+            if (currentDraggedLine !== null) {
+                return;
+            }
+
+            $(this).css({'cursor': '', 'stroke': ''});
+        });
+
+        $(document).on('mousedown', '.b_item_draggable_header', function () {
+
+            $(this).css({'cursor': 'move'});
+        });
+
+        $(document).on('mouseup', '.b_item_draggable_header', function () {
+
+            $(this).css({'cursor': ''});
         });
 
 
@@ -62,16 +128,17 @@
 
             drag: function (event, ui) {
 
+                //Updating all connected links (visually)
                 var objectId = parseInt($(event.target).attr('id'));
 
                 $.each(items[objectId].startLinks, function (key, data) {
 
-                    drawLink($(event.target), $('#' + data));
+                    createLink($(event.target), $('#' + data));
                 });
 
                 $.each(items[objectId].endLinks, function (key, data) {
 
-                    drawLink($('#' + data), $(event.target));
+                    createLink($('#' + data), $(event.target));
                 });
             },
         });
@@ -84,16 +151,19 @@
 
             drag: function (event, ui) {
 
-                drawLink($(this).parent(), $(this), true, true);
+                $(this).css({'cursor': 'move'});
+
+                //Updating the link (visually)
+                createLink($(this).parent(), $(this), true, true);
             },
 
 
             stop: function (event, ui) {
 
-                // Reset button position
-                $(this).css({top: '', left: ''});
+                // Reset button position & cursor
+                $(this).css({top: '', left: '', 'cursor': ''});
 
-                // Remove temporary line
+                // Remove temporary link
                 currentDraggedLine.remove();
                 currentDraggedLine = null;
             }
@@ -107,8 +177,6 @@
 
             drop: function (event, ui) {
 
-
-
                 var startObject = $(ui.draggable).parent();
                 var startObjectId = parseInt(startObject.attr('id'));
 
@@ -116,88 +184,126 @@
                 var endObjectId = parseInt($(this).attr('id'));
 
 
-                var startLinks = items[startObjectId].startLinks;
-                var countItems = startLinks.length;
-                if (countItems > 0) {
+                if( items[startObjectId].type != 2) {
+                    removeLink(startObjectId, endObjectId);
+                }
 
-                    $.each(startLinks, function (key, data) {
-
-                        $('#link_' + startObjectId + '_' + data).remove();
-
-                        var endLink = items[data].endLinks.indexOf(parseInt(startObjectId));
-                        if(endLink > -1) {
-                            items[data].endLinks.splice(endLink, 1);
-                        }
-
-                        countItems--;
-                        if (countItems <= 0) {
-
-                            if(startObjectId == endObjectId) {
-                                items[startObjectId].startLinks = [];
-                            }
-                            else {
-
-                                items[startObjectId].startLinks = [endObjectId];
-                                items[endObjectId].endLinks.push(startObjectId);
-                                drawLink(startObject, endObject);
-                            }
-                        }
-                    });
+                //we don't allow to link an object to itseld
+                if (startObjectId == endObjectId) {
+                    $('#' + startObjectId).find('.b_button_newLine').show();
+                }
+                //we also don't allow to link 2 objects in the 2 ways
+                else if (items[endObjectId].startLinks.indexOf(parseInt(startObjectId)) > -1) {
+                    $('#' + startObjectId).find('.b_button_newLine').show();
                 }
                 else {
 
-                    items[startObjectId].startLinks = [endObjectId];
+                    items[startObjectId].startLinks.push(endObjectId);
                     items[endObjectId].endLinks.push(startObjectId);
 
-                    drawLink(startObject, endObject);
+                    if( items[startObjectId].type != 2) {
+                        $(ui.draggable).hide();
+                    }
+
+                    createLink(startObject, endObject);
                 }
+
+                /*
+                 var startLinks = items[startObjectId].startLinks;
+                 var countItems = startLinks.length;
+                 if (countItems > 0) {
+
+                 //if there was already a (start) link we want to remove it
+                 $.each(startLinks, function (key, data) {
+
+                 //we remove the link
+                 $('#link_' + startObjectId + '_' + data).remove();
+
+                 //we remove the end data of the link
+                 var endLink = items[data].endLinks.indexOf(parseInt(startObjectId));
+                 if (endLink > -1) {
+                 items[data].endLinks.splice(endLink, 1);
+                 }
+
+                 countItems--;
+                 if (countItems <= 0) {
+
+                 //if it's dropped onto its parent, we remove start data of the link
+                 if (startObjectId == endObjectId) {
+                 items[startObjectId].startLinks = [];
+                 $('#' + startObjectId).find('.b_button_newLine').show();
+                 }
+                 else {
+                 //else we add the new link and replace start & end data of the link
+                 items[startObjectId].startLinks = [endObjectId];
+                 items[endObjectId].endLinks.push(startObjectId);
+                 $(ui.draggable).hide();
+                 createLink(startObject, endObject);
+                 }
+                 }
+                 });
+                 }
+                 else {
+
+                 //there is no link for this element, so we create it
+                 items[startObjectId].startLinks = [endObjectId];
+                 items[endObjectId].endLinks.push(startObjectId);
+                 $(ui.draggable).hide();
+                 createLink(startObject, endObject);
+                 }
+                 */
             }
         });
 
 
-        var currentDraggedLine = null;
-
-        function drawLink(startObject, endObject, temporary = false, customStartPoint = false) {
+        function createLink(startObject, endObject, temporary = false, customStartPoint = false) {
 
             var startObjectId = parseInt(startObject.attr('id'));
             var endObjectId = parseInt(endObject.attr('id'));
 
             if (!temporary || (temporary && currentDraggedLine === null)) {
 
-                if ($('#link_' + startObjectId + '_' + endObjectId).length) {
+                //if the link already exist and we wanted to create it, we are gonna update it instead
+                if (!temporary && $('#link_' + startObjectId + '_' + endObjectId).length) {
                     currentLine = $('#link_' + startObjectId + '_' + endObjectId);
                 }
                 else {
-
+                    //creating a new link
                     var currentLine = $(document.createElementNS('http://www.w3.org/2000/svg', 'line'));
                     $('#b_container_lines').append(currentLine);
                 }
 
+                //if we are dragging the new link button, we want to be able to update it every frame
                 if (temporary) {
                     currentDraggedLine = currentLine;
                 }
             }
 
+            //at this point, if we are in temporary mode we should have "currentDraggedLine" filled
             if (temporary) {
                 currentLine = currentDraggedLine;
             }
             else {
+                //adding and ID to be able to access it later
                 currentLine.attr('id', 'link_' + startObjectId + '_' + endObjectId);
+                currentLine.attr('data-startItemId', startObjectId);
+                currentLine.attr('data-endItemId', endObjectId);
             }
 
 
             // Calculating start positions
-            var offset = startObject.offset();
-            var centerX = offset.left + startObject.width() / 2;
 
-            if (customStartPoint) {
-                //starting from new line button place
-                var centerY = offset.top + startObject.height() - 4;
-            }
-            else {
-                //starting from middle of the block
-                var centerY = offset.top + startObject.height() / 2;
-            }
+            var offset = startObject.position();
+
+            var centerX = offset.left + (startObject.width() / 2) + 16; //last one is the padding not took into account
+            // if (customStartPoint) {
+            //starting from new line button place
+            //var centerY = offset.top + startObject.height() - 4 + 16; //last one is the padding not took into account
+            // }
+            // else {
+            //starting from middle of the block
+            var centerY = offset.top + (startObject.height() / 2) + 16; //last one is the padding not took into account
+            // }
 
             // Set start position
             currentLine.attr('x1', centerX);
@@ -205,15 +311,44 @@
 
 
             // Calculating end positions
-            offset = endObject.offset();
-            centerX = offset.left + endObject.width() / 2;
-            centerY = offset.top + endObject.height() / 2;
+            if (temporary) {
+                offset = endObject.position();
+
+                //May cause performances issues. Since it's a child we need to calculate the position of the parent + the position of the child. Todo : looks for a workaround
+                centerX = offset.left + endObject.parent().position().left + (endObject.width() / 2) + 2;
+                centerY = offset.top + endObject.parent().position().top + (endObject.height() / 2) + 2;
+            }
+            else {
+                offset = endObject.position();
+
+                centerX = offset.left + (endObject.width() / 2) + 16; //last one is the padding not took into account
+                centerY = offset.top + (endObject.height() / 2) + 16; //last one is the padding not took into account
+            }
+
 
             // Set end position
             currentLine.attr('x2', centerX);
             currentLine.attr('y2', centerY);
         }
 
+
+        function removeLink(startObjectId, endObjectId) {
+
+            //we remove the link
+            $('#link_' + startObjectId + '_' + endObjectId).remove();
+
+
+            //we remove the start data of the link
+            var startLink = items[startObjectId].startLinks.indexOf(parseInt(endObjectId));
+            if (startLink > -1) {
+                items[startObjectId].startLinks.splice(startLink, 1);
+            }
+            //we remove the end data of the link
+            var endLink = items[endObjectId].endLinks.indexOf(parseInt(startObjectId));
+            if (endLink > -1) {
+                items[endObjectId].endLinks.splice(endLink, 1);
+            }
+        }
     });
 </script>
 </body>
