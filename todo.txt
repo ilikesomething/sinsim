@@ -5,6 +5,11 @@
 
 
 - TODO :
+
+    - Remove on click canvas for canvas menu, it's annoying AF, and add a + button at the top right
+
+    - Open item edit modal just after creation, to prevent more useless clicks
+
     - Item type resource (link OR upload)
         - Upload, open the store with "your assets" (2 tabs, first : Your assets, Second : Asset store)
         - Asset store : list of free and paid asset. Display credits at the bottom, ect...

@@ -36,6 +36,7 @@ html, body, .container {
     -moz-border-radius: 5px;
     border-radius: 5px;
     max-width: 300px;
+    min-width: 150px;
 }
 
 .b_item_draggableHoverAllowed {
@@ -146,5 +147,14 @@ html, body, .container {
     z-index: 9999;
 }
 
+#b_canvas_menu {
+    position: absolute;
+    display: none;
+    width: 200px;
+    height: auto;
+    top: 0px;
+    right: 0px;
+    z-index: 9999;
+}
 
 
