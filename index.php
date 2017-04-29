@@ -31,6 +31,42 @@
 <div class="container padding-top-60">
     <div id="b_canvas">
         <svg id="b_container_lines"></svg>
+        <div id="b_item_menu">
+            <ul class="nav-menu">
+                <li class="icon icon-viewpen">
+                    <a data-type="1" class="b_item_menu_a">Edit text</a>
+                </li>
+                <li class="separator" class="b_item_menu_a"></li>
+                <li class="icon icon-topbarclosed">
+                    <a data-type="2" class="b_item_menu_a">Remove item</a>
+                </li>
+                <li class="icon icon-strategy-on">
+                    <a data-type="3" class="b_item_menu_a">Remove link</a>
+                </li>
+                <li class="separator" class="b_item_menu_a"></li>
+                <li>
+                    <a data-type="0" class="b_item_menu_a">Cancel</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal in" tabindex="-1" role="dialog" aria-labelledby="modal" style="display: none">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Modal title</h3>
+            </div>
+            <div class="modal-body">
+                Modal content...
+            </div>
+            <div class="modal-footer">
+                <a class="button object-right" data-text="ACCEPT" data-dismiss="modal"><span>ACCEPT</span></a>
+                <a class="button is-inverted object-right" data-text="CANCEL" data-dismiss="modal"><span>CANCEL</span></a>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -39,7 +75,18 @@
     var items = <?= $items; ?>;
     var types = {"1": "Section", "2": "Question", "3": "Option"};
 
+    const ITEM_TYPE_SECTION = 1;
+    const ITEM_TYPE_QUESTION = 2;
+    const ITEM_TYPE_OPTION = 3;
+
+    const MENU_CANCEL = 0;
+    const MENU_EDIT_TEXT = 1;
+    const MENU_REMOVE_ITEM = 2;
+    const MENU_REMOVE_LINK = 3;
+
     var currentDraggedLine = null;
+    var isMenuOpened = false;
+    var currentMenuLinkedObject = null;
 
     jQuery(document).ready(function ($) {
 
@@ -49,12 +96,11 @@
         $.each(items, function (itemId, itemData) {
 
             //add each item
-            var append = '<div class="b_item_draggable" id="' + itemId + '">';
-            append += '<div class="overflowHidden">';
-            append += '<div class="b_item_draggable_header">' + types[itemData.type] + '</div>';
+            var append = '<div class="b_item_draggable itemTypeBorder' + itemData.type + '"" id="' + itemId + '">';
+            append += '<div class="b_item_draggable_header itemTypeBackground' + itemData.type + '">' + types[itemData.type] + '</div>';
             append += '<div class="b_item_draggable_content">' + itemData.name + '</div>';
-            append += '</div>';
-            append += '<div class="b_button_newLine"></div>';
+            append += '<div class="b_button_newLine itemTypeBackground' + itemData.type + '"></div>';
+            append += '<div class="b_item_menu_icon"><a href="#"><span class="icon icon-topbarmenu icon-24"></span></a></div>';
             append += '</div>';
 
             $('#b_canvas').append(append);
@@ -68,7 +114,7 @@
 
                     $.each(itemData.startLinks, function (k, endItemId) {
 
-                        if( itemData.type != 2) {
+                        if (itemData.type != ITEM_TYPE_QUESTION) {
                             $('#' + startItemId).find('.b_button_newLine').hide();
                         }
 
@@ -77,6 +123,85 @@
                 });
             }
         });
+
+
+        //Menu open
+        $('.b_item_menu_icon').on('click', function () {
+            currentMenuLinkedObject = $(this).parent();
+            showMenu($(this).parent());
+        });
+
+
+        $('.b_item_menu_a').on('click', function (e) {
+
+            var thisObject = $(this);
+            var thisObjectType = $(this).attr('data-type');
+
+
+            isMenuOpened = false;
+            $('#b_item_menu').fadeOut();
+
+            if (currentMenuLinkedObject === null) {
+                console.log('error');
+                return;
+            }
+
+
+            var startObjectId = currentMenuLinkedObject.attr('id');
+
+            /*
+             const MENU_CANCEL = 0;
+             const MENU_EDIT_TEXT = 1;
+             const MENU_REMOVE_ITEM = 1;
+             const MENU_REMOVE_LINK = 2;*/
+
+            if (thisObjectType == MENU_REMOVE_LINK) {
+
+                $.each(items[startObjectId].startLinks, function (key, data) {
+
+                    removeLink(startObjectId, data);
+                });
+
+                $.each(items[startObjectId].endLinks, function (key, data) {
+
+                    removeLink(data, startObjectId);
+                });
+
+                $('#' + startObjectId).find('.b_button_newLine').show();
+            }
+
+            // $('#modalExample').modal('show');
+
+        });
+
+        //Close menu if clicking elsewhere
+        $(document).on('mousedown', function (e) {
+
+            if (isMenuOpened) {
+
+                var target = e.target;
+
+                if (!$(target).hasClass('b_item_menu_a') && !$(target).parents().hasClass('b_item_menu_a') && !$(target).hasClass('b_item_menu_icon') && !$(target).parents().hasClass('b_item_menu_icon')) {
+
+                    isMenuOpened = false;
+                    $('#b_item_menu').hide();
+                }
+            }
+        });
+
+        function showMenu(itemObject) {
+
+            isMenuOpened = true;
+
+            //todo handle TYPE to display special items in the menu
+            //this will change th width of the menu if we add or remove items
+
+            var xPos = itemObject.position().left + itemObject.outerWidth();
+            var yPos = itemObject.position().top;
+
+            $('#b_item_menu').css({'top': yPos, 'left': xPos});
+            $('#b_item_menu').fadeIn();
+        }
 
 
         //Link mouse interactions
@@ -98,7 +223,7 @@
                 return;
             }
 
-            $(this).css({'cursor': 'pointer', 'stroke': '#2cbc0f'});
+            $(this).css({'cursor': 'pointer', 'stroke': '#818181'});
         });
 
         $('#b_container_lines').on('mouseout', 'line', function () {
@@ -141,6 +266,15 @@
                     createLink($('#' + data), $(event.target));
                 });
             },
+
+            stop: function (event, ui) {
+
+                var object = $(event.target);
+                var objectId = parseInt(object.attr('id'));
+
+                items[objectId].xPos = object.position().left;
+                items[objectId].yPos = object.position().top;
+            },
         });
 
 
@@ -173,9 +307,29 @@
         // When dropping the new line button onto an item
         $('.b_item_draggable').droppable({
 
+            //hoverClass: "b_item_draggableActive",
             accept: '.b_button_newLine',
 
+            over: function (event, ui) {
+
+                if (!isLinkAllowed($(ui.draggable).parent(), $(this))) {
+                    $(this).addClass('b_item_draggableHoverNotAllowed');
+                }
+                else {
+                    $(this).addClass('b_item_draggableHoverAllowed');
+                }
+            },
+
+            out: function (event, ui) {
+
+                $(this).removeClass("b_item_draggableHoverAllowed");
+                $(this).removeClass("b_item_draggableHoverNotAllowed");
+            },
+
             drop: function (event, ui) {
+
+                $(this).removeClass("b_item_draggableHoverAllowed");
+                $(this).removeClass("b_item_draggableHoverNotAllowed");
 
                 var startObject = $(ui.draggable).parent();
                 var startObjectId = parseInt(startObject.attr('id'));
@@ -184,16 +338,12 @@
                 var endObjectId = parseInt($(this).attr('id'));
 
 
-                if( items[startObjectId].type != 2) {
+                //Type 2 has multiple links allowed, others not
+                if (items[startObjectId].type != ITEM_TYPE_QUESTION) {
                     removeLink(startObjectId, endObjectId);
                 }
 
-                //we don't allow to link an object to itseld
-                if (startObjectId == endObjectId) {
-                    $('#' + startObjectId).find('.b_button_newLine').show();
-                }
-                //we also don't allow to link 2 objects in the 2 ways
-                else if (items[endObjectId].startLinks.indexOf(parseInt(startObjectId)) > -1) {
+                if (!isLinkAllowed(startObject, endObject)) {
                     $('#' + startObjectId).find('.b_button_newLine').show();
                 }
                 else {
@@ -201,57 +351,12 @@
                     items[startObjectId].startLinks.push(endObjectId);
                     items[endObjectId].endLinks.push(startObjectId);
 
-                    if( items[startObjectId].type != 2) {
+                    if (items[startObjectId].type != ITEM_TYPE_QUESTION) {
                         $(ui.draggable).hide();
                     }
 
                     createLink(startObject, endObject);
                 }
-
-                /*
-                 var startLinks = items[startObjectId].startLinks;
-                 var countItems = startLinks.length;
-                 if (countItems > 0) {
-
-                 //if there was already a (start) link we want to remove it
-                 $.each(startLinks, function (key, data) {
-
-                 //we remove the link
-                 $('#link_' + startObjectId + '_' + data).remove();
-
-                 //we remove the end data of the link
-                 var endLink = items[data].endLinks.indexOf(parseInt(startObjectId));
-                 if (endLink > -1) {
-                 items[data].endLinks.splice(endLink, 1);
-                 }
-
-                 countItems--;
-                 if (countItems <= 0) {
-
-                 //if it's dropped onto its parent, we remove start data of the link
-                 if (startObjectId == endObjectId) {
-                 items[startObjectId].startLinks = [];
-                 $('#' + startObjectId).find('.b_button_newLine').show();
-                 }
-                 else {
-                 //else we add the new link and replace start & end data of the link
-                 items[startObjectId].startLinks = [endObjectId];
-                 items[endObjectId].endLinks.push(startObjectId);
-                 $(ui.draggable).hide();
-                 createLink(startObject, endObject);
-                 }
-                 }
-                 });
-                 }
-                 else {
-
-                 //there is no link for this element, so we create it
-                 items[startObjectId].startLinks = [endObjectId];
-                 items[endObjectId].endLinks.push(startObjectId);
-                 $(ui.draggable).hide();
-                 createLink(startObject, endObject);
-                 }
-                 */
             }
         });
 
@@ -271,6 +376,8 @@
                     //creating a new link
                     var currentLine = $(document.createElementNS('http://www.w3.org/2000/svg', 'line'));
                     $('#b_container_lines').append(currentLine);
+                    // $(currentLine).css('stroke', $(startObjectId).css('border-color'));
+                    currentLine.addClass('itemTypeStroke' + items[startObjectId].type);
                 }
 
                 //if we are dragging the new link button, we want to be able to update it every frame
@@ -348,6 +455,40 @@
             if (endLink > -1) {
                 items[endObjectId].endLinks.splice(endLink, 1);
             }
+        }
+
+        function isLinkAllowed(startObject, endObject) {
+
+            var startObjectId = parseInt(startObject.attr('id'));
+            var endObjectId = parseInt(endObject.attr('id'));
+
+            var startType = items[startObjectId].type;
+            var endType = items[endObjectId].type;
+
+            //a section can only link to a question or.. TODO
+            if (startType == ITEM_TYPE_SECTION && (endType != ITEM_TYPE_QUESTION)) {
+                return false;
+            }
+            //a question can only link to answers
+            else if (startType == ITEM_TYPE_QUESTION && (endType != ITEM_TYPE_OPTION)) {
+                return false;
+            }
+            //an answer can only link to a Section or a Question
+            else if (startType == ITEM_TYPE_OPTION && (endType != ITEM_TYPE_SECTION && endType != ITEM_TYPE_QUESTION)) {
+                return false;
+            }
+            //we don't allow to link an object to itself
+            else if (startObjectId == endObjectId) {
+                return false;// $('#' + startObjectId).find('.b_button_newLine').show();
+            }
+            //we also don't allow to link 2 objects in the 2 ways
+            else if (items[endObjectId].startLinks.indexOf(parseInt(startObjectId)) > -1) {
+                return false; // $('#' + startObjectId).find('.b_button_newLine').show();
+            }
+            else {
+                return true;
+            }
+
         }
     });
 </script>

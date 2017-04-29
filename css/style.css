@@ -1,14 +1,20 @@
+html, body, .container {
+    height: 100%;
+}
+
 #b_canvas {
     display: block;
     position: relative;
     width: 1000px;
-    height: 600px;
-    border: 1px dotted #FB054B;
+    height: 98%;
+    border: 1px dotted #F98CAB;
     margin: 0 auto;
-    background-color: #e6e6e6;
+    background-color: #F2E4E8;
     -webkit-border-radius: 5px;
     -moz-border-radius: 5px;
     border-radius: 5px;
+    resize: vertical;
+    overflow: auto;
 }
 
 #b_container_lines {
@@ -25,46 +31,79 @@
     height: auto;
     padding: 16px;
     background-color: #FFFFFF;
-    border: 1px solid #FB054B;
+    border: 1px solid #000;
     -webkit-border-radius: 5px;
     -moz-border-radius: 5px;
     border-radius: 5px;
 }
 
-.overflowHidden {
-    overflow: hidden;
+.b_item_draggableHoverAllowed {
+    background-color: #abffac;
+    border: 1px solid #abffac;
 }
 
-.b_item_draggable:hover {
-    /*border-color: #47cf73;*/
+.b_item_draggableHoverNotAllowed {
+    background-color: #ff9995;
+    border: 1px solid #ff9995;
 }
-
 
 .b_item_draggable_header {
     position: absolute;
-    top:0px;
-    left:0px;
+    top: 0px;
+    left: 0px;
     width: 100%;
     height: 26px;
     padding: 4px 6px;
-    background-color: #FB054B;
     color: #ffffff;
-    cursor: pointer;
+    cursor: move;
 }
 
+/* Section */
+.itemTypeBorder1 {
+    border-color: #00A5E6;
+}
 
+.itemTypeBackground1 {
+    background-color: #00A5E6;
+}
+
+.itemTypeStroke1 {
+    stroke: #00A5E6;
+}
+
+.itemTypeBorder2 {
+    border-color: #FB054B;
+}
+
+.itemTypeBackground2 {
+    background-color: #FB054B;
+}
+
+.itemTypeStroke2 {
+    stroke: #FB054B;
+}
+
+.itemTypeBorder3 {
+    border-color: #EC7D00;
+}
+
+.itemTypeBackground3 {
+    background-color: #EC7D00;
+}
+
+.itemTypeStroke3 {
+    stroke: #EC7D00;
+}
 
 .b_item_draggable_content {
     display: block;
     margin-top: 26px;
 }
 
-
 .b_button_newLine {
     position: absolute;
     width: 16px;
     height: 16px;
-    background-color: #FB054B;
     border-radius: 4px;
     bottom: -10px;
     left: 50%;
@@ -74,3 +113,37 @@
     border-radius: 100%;
     cursor: pointer;
 }
+
+.b_item_menu_icon {
+    position: absolute;
+    display: block;
+    width: auto;
+    height: 30px;
+    top: 0px;
+    right: 1px;
+}
+
+.b_item_menu_icon > a {
+    position: relative;
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    color: #fff;
+}
+
+.b_item_menu_icon > a:hover {
+    color: #fbc2cf;
+}
+
+#b_item_menu {
+    position: absolute;
+    display: none;
+    width: 200px;
+    height: auto;
+    top: 0px;
+    right: 0px;
+    z-index: 9999;
+}
+
+
+

@@ -1,6 +1,9 @@
-- We should check that the user doesn't link :
-    - an answer to anything else than a question
-    - an answer to its question
-    - a question to anything else than an answer
-    - a section to anything else than a question
-    - ...
+- REMINDERS :
+    -Builder will only work online, of course, with php and ect...
+    -Player should work online but also offline, so NO PHP here. There will be only one ajax call that will be used by the button "send results to the server" in case we answered offline and want to submit the results later on
+
+
+
+- TODO :
+    - Figure out a way to load every needed items  (images, videos, ...)when we export the player offline (Firefox > File  > save webpage ? + all external elements in a display:none block to force the load in the save function of the browser ? too heavy ?)
+    - We should save each version of the sim (each time we hit the save button) and results sent by participants should always come with a parameter indicating on which version they answered. This will keep everything safe and working on the long run even with offline sessions.
