@@ -5,6 +5,7 @@
 
 
 - TODO :
+    - Fix new item position on click, not ok at all
 
     - Remove on click canvas for canvas menu, it's annoying AF, and add a + button at the top right
 
