@@ -11,8 +11,6 @@
     <link rel="shortcut icon" type="image/x-icon" href="favicon.ico"/><![endif]-->
     <link rel="stylesheet" type="text/css" href="css/changr.css">
     <link rel="stylesheet" type="text/css" href="css/style.css">
-    <script src="js/jquery.min.js"></script>
-    <script src="js/jquery-ui.min.js"></script>
 </head>
 <body>
 <noscript>
@@ -41,7 +39,7 @@
                     <a data-type="2" class="b_item_menu_a">Remove item</a>
                 </li>
                 <li class="icon icon-strategy-on">
-                    <a data-type="3" class="b_item_menu_a">Remove link</a>
+                    <a data-type="3" class="b_item_menu_a">Remove links</a>
                 </li>
                 <li class="separator" class="b_item_menu_a"></li>
                 <li>
@@ -53,27 +51,43 @@
 </div>
 
 
-<div class="modal in" tabindex="-1" role="dialog" aria-labelledby="modal" style="display: none">
+<div class="modal fade" id="modalItemEditText" tabindex="-1" role="dialog" aria-labelledby="modal">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Modal title</h3>
+                <h3>Edit <span></span> text</h3>
             </div>
             <div class="modal-body">
-                Modal content...
+                <form>
+                    <?php
+                    foreach ($lang_available as $l) {
+                        ?>
+                        <div class="form-group">
+                            <label class="form-label" for="editText_<?= $lang_data[$l]['code']; ?>"><?= $lang_data[$l]['name']; ?></label>
+                            <textarea class="form-control" rows="1" placeholder="<?= $lang_data[$l]['name']; ?>" id="modalItemEditTextInput_<?= $lang_data[$l]['code']; ?>"></textarea>
+                        </div>
+                        <?php
+                    }
+                    ?>
+                </form>
             </div>
             <div class="modal-footer">
-                <a class="button object-right" data-text="ACCEPT" data-dismiss="modal"><span>ACCEPT</span></a>
+                <a class="button object-right submitModal" data-id="modalItemEditText" data-text="SAVE" data-dismiss="modal" data-toggle="infobar" data-target="#infobar" data-label="Changes applied"><span>SAVE</span></a>
                 <a class="button is-inverted object-right" data-text="CANCEL" data-dismiss="modal"><span>CANCEL</span></a>
             </div>
         </div>
     </div>
 </div>
 
+<script src="js/jquery.min.js"></script>
+<script src="js/jquery-ui.min.js"></script>
+<script src="http://dev.changr.com/framework/js/app/app.js"></script>
 <script type="text/javascript">
 
+    var app = <?= $mainData; ?>;
     var items = <?= $items; ?>;
     var types = {"1": "Section", "2": "Question", "3": "Option"};
+    var defaultLang = '<?= $lang_data[$lang_default]['code']; ?>';
 
     const ITEM_TYPE_SECTION = 1;
     const ITEM_TYPE_QUESTION = 2;
@@ -91,14 +105,15 @@
     jQuery(document).ready(function ($) {
 
 
-        //Init items & links on canvas
+        /******************************* INIT *******************************/
+
         var countItems = Object.keys(items).length;
         $.each(items, function (itemId, itemData) {
 
             //add each item
-            var append = '<div class="b_item_draggable itemTypeBorder' + itemData.type + '"" id="' + itemId + '">';
+            var append = '<div class="b_item_draggable itemTypeBorder' + itemData.type + '" id="' + itemId + '">';
             append += '<div class="b_item_draggable_header itemTypeBackground' + itemData.type + '">' + types[itemData.type] + '</div>';
-            append += '<div class="b_item_draggable_content">' + itemData.name + '</div>';
+            append += '<div class="b_item_draggable_content">' + itemData.name[defaultLang] + '</div>';
             append += '<div class="b_button_newLine itemTypeBackground' + itemData.type + '"></div>';
             append += '<div class="b_item_menu_icon"><a href="#"><span class="icon icon-topbarmenu icon-24"></span></a></div>';
             append += '</div>';
@@ -125,27 +140,23 @@
         });
 
 
-        //Menu open
+        /******************************* ITEM MENU *******************************/
+
+        //Open menu of an item
         $('.b_item_menu_icon').on('click', function () {
             currentMenuLinkedObject = $(this).parent();
             showMenu($(this).parent());
         });
 
 
+        //When clicking on an link of the item's menu
         $('.b_item_menu_a').on('click', function (e) {
 
             var thisObject = $(this);
             var thisObjectType = $(this).attr('data-type');
 
-
             isMenuOpened = false;
             $('#b_item_menu').fadeOut();
-
-            if (currentMenuLinkedObject === null) {
-                console.log('error');
-                return;
-            }
-
 
             var startObjectId = currentMenuLinkedObject.attr('id');
 
@@ -155,26 +166,32 @@
              const MENU_REMOVE_ITEM = 1;
              const MENU_REMOVE_LINK = 2;*/
 
-            if (thisObjectType == MENU_REMOVE_LINK) {
+            if (thisObjectType == MENU_EDIT_TEXT) {
 
-                $.each(items[startObjectId].startLinks, function (key, data) {
-
-                    removeLink(startObjectId, data);
+                $.each(items[startObjectId].name, function (key, data) {
+                    $('#modalItemEditTextInput_' + key).val(data);
                 });
 
-                $.each(items[startObjectId].endLinks, function (key, data) {
-
-                    removeLink(data, startObjectId);
-                });
-
-                $('#' + startObjectId).find('.b_button_newLine').show();
+                $('#modalItemEditText').modal('show');
             }
+            else if (thisObjectType == MENU_REMOVE_ITEM) {
 
-            // $('#modalExample').modal('show');
+                removeAllItemLinks(startObjectId);
 
+                //todo check if it does not have a chance to fire before "removeAllItemLinks" .each functions. it would break everything
+                //delete items[startObjectId];
+                $('#'+startObjectId).remove();
+            }
+            else if (thisObjectType == MENU_REMOVE_LINK) {
+
+                removeAllItemLinks(startObjectId);
+            }
         });
 
-        //Close menu if clicking elsewhere
+
+
+
+        //Closing the menu if clicking elsewhere
         $(document).on('mousedown', function (e) {
 
             if (isMenuOpened) {
@@ -189,94 +206,36 @@
             }
         });
 
-        function showMenu(itemObject) {
 
-            isMenuOpened = true;
+        /******************************* MODALS *******************************/
 
-            //todo handle TYPE to display special items in the menu
-            //this will change th width of the menu if we add or remove items
+            //When submitting a modal
+        $('.submitModal').on('click', function (e) {
 
-            var xPos = itemObject.position().left + itemObject.outerWidth();
-            var yPos = itemObject.position().top;
+            //Modal : Edit text of an item
+            if ($(this).attr('data-id') == 'modalItemEditText') { //rather than searching in parent or whatever, in case of changes in the html
 
-            $('#b_item_menu').css({'top': yPos, 'left': xPos});
-            $('#b_item_menu').fadeIn();
-        }
+                var object = currentMenuLinkedObject;
+                var objectId = currentMenuLinkedObject.attr('id');
+                var defaultLangText = $('#modalItemEditTextInput_' + app.mainLanguage).val();
 
+                if (defaultLangText.length > 140) {
+                    defaultLangText = defaultLangText.slice(0, 140) + '...';
+                }
 
-        //Link mouse interactions
-        $('#b_container_lines').on('click', 'line', function () {
+                $(object).find('.b_item_draggable_content').text(defaultLangText);
 
-            alert('TODO : window to select "Delete this link". For now we are gonna delete it automatically when closing this alert');
+                items[objectId].name = [];
+                $.each(app.languages, function (key, data) {
 
-            var startObjectId = parseInt($(this).attr('data-startItemId'));
-            var endObjectId = parseInt($(this).attr('data-endItemId'));
+                    items[objectId].name[data] = $('#modalItemEditTextInput_' + data).val();
 
-            $('#' + startObjectId).find('.b_button_newLine').show();
-            removeLink(startObjectId, endObjectId);
-        });
-
-
-        $('#b_container_lines').on('mouseover', 'line', function () {
-
-            if (currentDraggedLine !== null) {
-                return;
-            }
-
-            $(this).css({'cursor': 'pointer', 'stroke': '#818181'});
-        });
-
-        $('#b_container_lines').on('mouseout', 'line', function () {
-
-            if (currentDraggedLine !== null) {
-                return;
-            }
-
-            $(this).css({'cursor': '', 'stroke': ''});
-        });
-
-        $(document).on('mousedown', '.b_item_draggable_header', function () {
-
-            $(this).css({'cursor': 'move'});
-        });
-
-        $(document).on('mouseup', '.b_item_draggable_header', function () {
-
-            $(this).css({'cursor': ''});
-        });
-
-
-        // When dragging an item
-        $('.b_item_draggable').draggable({
-
-            containment: "#b_canvas",
-
-            drag: function (event, ui) {
-
-                //Updating all connected links (visually)
-                var objectId = parseInt($(event.target).attr('id'));
-
-                $.each(items[objectId].startLinks, function (key, data) {
-
-                    createLink($(event.target), $('#' + data));
                 });
-
-                $.each(items[objectId].endLinks, function (key, data) {
-
-                    createLink($('#' + data), $(event.target));
-                });
-            },
-
-            stop: function (event, ui) {
-
-                var object = $(event.target);
-                var objectId = parseInt(object.attr('id'));
-
-                items[objectId].xPos = object.position().left;
-                items[objectId].yPos = object.position().top;
-            },
+            }
         });
 
+
+        /******************************* ITEM LINKS *******************************/
 
         // When dragging the new line button
         $('.b_button_newLine').draggable({
@@ -360,6 +319,84 @@
             }
         });
 
+
+        //Link mouse interactions
+        $('#b_container_lines').on('click', 'line', function () {
+
+            alert('TODO : window to select "Delete this link". For now we are gonna delete it automatically when closing this alert');
+
+            var startObjectId = parseInt($(this).attr('data-startItemId'));
+            var endObjectId = parseInt($(this).attr('data-endItemId'));
+
+            $('#' + startObjectId).find('.b_button_newLine').show();
+            removeLink(startObjectId, endObjectId);
+        });
+
+
+        $('#b_container_lines').on('mouseover', 'line', function () {
+
+            if (currentDraggedLine !== null) {
+                return;
+            }
+
+            $(this).css({'cursor': 'pointer', 'stroke': '#818181'});
+        });
+
+        $('#b_container_lines').on('mouseout', 'line', function () {
+
+            if (currentDraggedLine !== null) {
+                return;
+            }
+
+            $(this).css({'cursor': '', 'stroke': ''});
+        });
+
+        $(document).on('mousedown', '.b_item_draggable_header', function () {
+
+            $(this).css({'cursor': 'move'});
+        });
+
+        $(document).on('mouseup', '.b_item_draggable_header', function () {
+
+            $(this).css({'cursor': ''});
+        });
+
+
+        /******************************* ITEM *******************************/
+
+        // When dragging an item
+        $('.b_item_draggable').draggable({
+
+            containment: "#b_canvas",
+
+            drag: function (event, ui) {
+
+                //Updating all connected links (visually)
+                var objectId = parseInt($(event.target).attr('id'));
+
+                $.each(items[objectId].startLinks, function (key, data) {
+
+                    createLink($(event.target), $('#' + data));
+                });
+
+                $.each(items[objectId].endLinks, function (key, data) {
+
+                    createLink($('#' + data), $(event.target));
+                });
+            },
+
+            stop: function (event, ui) {
+
+                var object = $(event.target);
+                var objectId = parseInt(object.attr('id'));
+
+                items[objectId].xPos = object.position().left;
+                items[objectId].yPos = object.position().top;
+            },
+        });
+
+
+        /******************************* FUNCTIONS *******************************/
 
         function createLink(startObject, endObject, temporary = false, customStartPoint = false) {
 
@@ -457,6 +494,25 @@
             }
         }
 
+
+        function removeAllItemLinks(startObjectId) {
+
+            var startLinks = $.merge([], items[startObjectId].startLinks); //to prevent link with the original array
+            var endLinks = $.merge([], items[startObjectId].endLinks);
+
+            $.each(startLinks, function (key, data) {
+                removeLink(startObjectId, data);
+            });
+
+            $('#' + startObjectId).find('.b_button_newLine').show();
+
+            $.each(endLinks, function (key, data) {
+                $('#' + data).find('.b_button_newLine').show();
+                removeLink(data, startObjectId);
+            });
+        }
+
+
         function isLinkAllowed(startObject, endObject) {
 
             var startObjectId = parseInt(startObject.attr('id'));
@@ -489,6 +545,21 @@
                 return true;
             }
 
+        }
+
+
+        function showMenu(itemObject) {
+
+            isMenuOpened = true;
+
+            //todo handle TYPE to display special items in the menu
+            //this will change th width of the menu if we add or remove items
+
+            var xPos = itemObject.position().left + itemObject.outerWidth();
+            var yPos = itemObject.position().top;
+
+            $('#b_item_menu').css({'top': yPos, 'left': xPos});
+            $('#b_item_menu').fadeIn();
         }
     });
 </script>

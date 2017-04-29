@@ -35,6 +35,7 @@ html, body, .container {
     -webkit-border-radius: 5px;
     -moz-border-radius: 5px;
     border-radius: 5px;
+    max-width: 300px;
 }
 
 .b_item_draggableHoverAllowed {

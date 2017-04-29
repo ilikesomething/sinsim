@@ -5,5 +5,15 @@
 
 
 - TODO :
+    - Item type resource (link OR upload)
+        - Upload, open the store with "your assets" (2 tabs, first : Your assets, Second : Asset store)
+        - Asset store : list of free and paid asset. Display credits at the bottom, ect...
+
+        - if upload image, display directly in the builder item
+        - if upload mov, put a movie logo
+        - if link of a resource like youtube, get the static image of the video :)
+
+
+
     - Figure out a way to load every needed items  (images, videos, ...)when we export the player offline (Firefox > File  > save webpage ? + all external elements in a display:none block to force the load in the save function of the browser ? too heavy ?)
     - We should save each version of the sim (each time we hit the save button) and results sent by participants should always come with a parameter indicating on which version they answered. This will keep everything safe and working on the long run even with offline sessions.
