@@ -32,15 +32,25 @@
         <svg id="b_container_lines"></svg>
         <div id="b_item_menu">
             <ul class="nav-menu">
-                <li class="icon icon-viewpen">
-                    <a data-type="1" class="b_menu_a">Edit text</a>
-                </li>
+                <div id="b_canvas_menu_1">
+                    <li class="icon icon-viewpen">
+                        <a data-type="1" class="b_menu_a">Edit text</a>
+                    </li>
+                    <li class="icon icon-postdocument-off">
+                        <a data-type="2" class="b_menu_a">Attach a resource (TODO)</a>
+                    </li>
+                </div>
+                <div id="b_canvas_menu_2">
+                    <li class="icon icon-viewpen">
+                        <a data-type="3" class="b_menu_a">Edit score</a>
+                    </li>
+                </div>
                 <li class="separator" class="b_menu_a"></li>
                 <li class="icon icon-topbarclosed">
-                    <a data-type="2" class="b_menu_a">Remove item</a>
+                    <a data-type="4" class="b_menu_a">Remove item</a>
                 </li>
                 <li class="icon icon-strategy-on">
-                    <a data-type="3" class="b_menu_a">Remove links</a>
+                    <a data-type="5" class="b_menu_a">Remove links</a>
                 </li>
                 <li class="separator" class="b_menu_a"></li>
                 <li>
@@ -49,27 +59,37 @@
             </ul>
         </div>
     </div>
-
 </div>
 <div id="b_canvas_menu">
     <ul class="nav-menu">
         <li class="icon icon-action-programcontent-on">
-            <a data-type="1" class="b_menu_a">Section</a>
+            <a data-type="1" class="b_menu_a">Round</a>
+        </li>
+        <li class="icon icon-action-programinfo-off">
+            <a data-type="2" class="b_menu_a">Info</a>
         </li>
         <li class="icon icon-viewpen">
-            <a data-type="2" class="b_menu_a">Question</a>
+            <a data-type="3" class="b_menu_a">Question</a>
         </li>
-        <li class="icon icon-viewcheck">
-            <a data-type="3" class="b_menu_a">Option</a>
-        </li>
-        <li class="icon icon-postdocument-off">
-            <a data-type="4" class="b_menu_a disabled">Resource</a>
+
+
+        <li class="hoverable icon icon-viewcheck">
+            <a data-type="4" class="b_menu_a" data-toggle="dropdown"><span>Option</span><span
+                        class="icon icon-carat object-right color-grey3"></span></a>
+            <ul class="nav-menu is-nowrap">
+                <li>
+                    <a data-type="4" class="b_menu_a">Single choice</a>
+                </li>
+                <li>
+                    <a data-type="5" class="b_menu_a">Multiple choice</a>
+                </li>
+            </ul>
         </li>
         <li class="icon icon-action-contact-off">
-            <a data-type="5" class="b_menu_a disabled">Mail event</a>
+            <a data-type="5" class="b_menu_a disabled">Mail event (TODO)</a>
         </li>
         <li class="icon icon-refresh">
-            <a data-type="6" class="b_menu_a disabled">Score variation</a>
+            <a data-type="6" class="b_menu_a">Score variation</a>
         </li>
         <li class="separator" class="b_menu_a"></li>
         <li>
@@ -86,21 +106,43 @@
             </div>
             <div class="modal-body">
                 <form>
-                    <?php
-                    foreach ($lang_available as $l) {
-                        ?>
-                        <div class="form-group">
-                            <label class="form-label" for="editText_<?= $lang_data[$l]['code']; ?>"><?= $lang_data[$l]['name']; ?></label>
-                            <textarea class="form-control" rows="1" placeholder="<?= $lang_data[$l]['name']; ?>" id="modalItemEditTextInput_<?= $lang_data[$l]['code']; ?>"></textarea>
-                        </div>
-                        <?php
-                    }
-                    ?>
                 </form>
             </div>
             <div class="modal-footer">
-                <a class="button object-right submitModal" data-id="modalItemEditText" data-text="SAVE" data-dismiss="modal" data-toggle="infobar" data-target="#infobar" data-label="Changes applied"><span>SAVE</span></a>
-                <a class="button is-inverted object-right" data-text="CANCEL" data-dismiss="modal"><span>CANCEL</span></a>
+                <a class="button object-right submitModal" data-id="modalItemEditText" data-text="SAVE"
+                   data-dismiss="modal" data-toggle="infobar" data-target="#infobar" data-label="Changes applied"><span>SAVE</span></a>
+                <a class="button is-inverted object-right" data-text="CANCEL"
+                   data-dismiss="modal"><span>CANCEL</span></a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="modalItemEditScore" tabindex="-1" role="dialog" aria-labelledby="modal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit score</h3>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label class="form-label" for="modalItemEditScoreSelected">Select a score</label>
+                        <select class="form-control" id="modalItemEditScoreSelected">
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="modalItemEditScoreInput">Set a variation</label>
+                        <input class="form-control" type="text" id="modalItemEditScoreInput" placeholder="+100">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <a class="button object-right submitModal" data-id="modalItemEditScore" data-text="SAVE"
+                   data-dismiss="modal" data-toggle="infobar" data-target="#infobar" data-label="Changes applied"><span>SAVE</span></a>
+                <a class="button is-inverted object-right" data-text="CANCEL"
+                   data-dismiss="modal"><span>CANCEL</span></a>
             </div>
         </div>
     </div>
@@ -114,7 +156,6 @@
 
     var app = <?= $mainData; ?>;
     var items = <?= $items; ?>;
-    var types = {"1": "Section", "2": "Question", "3": "Option"};
 
 </script>
 <script src="js/builder.js"></script>

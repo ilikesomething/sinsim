@@ -5,9 +5,16 @@
 
 
 - TODO :
-    - Fix new item position on click, not ok at all
 
-    - Remove on click canvas for canvas menu, it's annoying AF, and add a + button at the top right
+    - Disable drag button if not lined to a parent / display if linked
+
+    Section > Step info
+    Question > Step question ect..
+    Every type should have a possibility to add a resource  (image video) along with the  text
+    Map : able to place things on the map
+    display score (like at the bottom)
+
+
 
     - Open item edit modal just after creation, to prevent more useless clicks
 

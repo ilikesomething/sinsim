@@ -1,3 +1,7 @@
+html {
+    overflow-y: scroll;
+}
+
 html, body, .container {
     height: 100%;
 }
@@ -6,10 +10,10 @@ html, body, .container {
     display: block;
     position: relative;
     width: 1000px;
-    height: 98%;
-    border: 1px dotted #F98CAB;
+    height: 96%;
+    border: 1px dotted #f9bcd0;
     margin: 0 auto;
-    background-color: #F2E4E8;
+    background-color: #FDF6F8;
     -webkit-border-radius: 5px;
     -moz-border-radius: 5px;
     border-radius: 5px;
@@ -36,7 +40,7 @@ html, body, .container {
     -moz-border-radius: 5px;
     border-radius: 5px;
     max-width: 300px;
-    min-width: 150px;
+    min-width: 180px;
 }
 
 .b_item_draggableHoverAllowed {
@@ -60,41 +64,93 @@ html, body, .container {
     cursor: move;
 }
 
-/* Section */
 .itemTypeBorder1 {
-    border-color: #00A5E6;
+    border-color: #4c4c4c;
 }
 
 .itemTypeBackground1 {
-    background-color: #00A5E6;
+    background-color: #4c4c4c;
 }
 
 .itemTypeStroke1 {
-    stroke: #00A5E6;
+    stroke: #4c4c4c;
 }
 
 .itemTypeBorder2 {
-    border-color: #FB054B;
+    border-color: #00A5E6;
 }
 
 .itemTypeBackground2 {
-    background-color: #FB054B;
+    background-color: #00A5E6;
 }
 
 .itemTypeStroke2 {
-    stroke: #FB054B;
+    stroke: #00A5E6;
 }
 
 .itemTypeBorder3 {
-    border-color: #EC7D00;
+    border-color: #FB054B;
 }
 
 .itemTypeBackground3 {
-    background-color: #EC7D00;
+    background-color: #FB054B;
 }
 
 .itemTypeStroke3 {
+    stroke: #FB054B;
+}
+
+.itemTypeBorder4 {
+    border-color: #EC7D00;
+}
+
+.itemTypeBackground4 {
+    background-color: #EC7D00;
+}
+
+.itemTypeStroke4 {
     stroke: #EC7D00;
+}
+
+.itemTypeBorder5 {
+    border-color: #ec5a05;
+}
+
+.itemTypeBackground5 {
+    background-color: #ec5a05;
+}
+
+.itemTypeStroke5 {
+    stroke: #ec5a05;
+}
+
+.itemTypeBorder6 {
+    border-color: #706cec;
+}
+
+.itemTypeBackground6 {
+    background-color: #706cec;
+}
+
+.itemTypeStroke6 {
+    stroke: #706cec;
+}
+
+.positiveScore, .negativeScore {
+    text-align: center;
+}
+
+.positiveScore span, .negativeScore span {
+    font-weight: bold;
+    font-size: 40px;
+}
+
+.positiveScore span {
+    color: #73ff6d;
+}
+
+.negativeScore span {
+    color: #ff4f4e;
 }
 
 .b_item_draggable_content {
@@ -156,5 +212,3 @@ html, body, .container {
     right: 0px;
     z-index: 9999;
 }
-
-

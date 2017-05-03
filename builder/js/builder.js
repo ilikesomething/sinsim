@@ -1,11 +1,25 @@
-const ITEM_TYPE_SECTION = 1;
-const ITEM_TYPE_QUESTION = 2;
-const ITEM_TYPE_OPTION = 3;
+var types = {
+    "1": "Round",
+    "2": "Info",
+    "3": "Question",
+    "4": "Option (Single)",
+    "5": "Option (Multiple)",
+    "6": "Score variation"
+};
+
+const ITEM_TYPE_ROUND = 1;
+const ITEM_TYPE_INFO = 2;
+const ITEM_TYPE_QUESTION = 3;
+const ITEM_TYPE_OPTION_RADIO = 4;
+const ITEM_TYPE_OPTION_CHECKBOX = 5;
+const ITEM_TYPE_SCORE_VARIATION = 6;
 
 const MENU_ITEM_CANCEL = 0;
 const MENU_ITEM_EDIT_TEXT = 1;
-const MENU_ITEM_REMOVE = 2;
-const MENU_ITEM_REMOVE_LINK = 3;
+const MENU_ITEM_ADD_RESOURCE = 2;
+const MENU_ITEM_EDIT_SCORE = 3;
+const MENU_ITEM_REMOVE = 4;
+const MENU_ITEM_REMOVE_LINK = 5;
 
 
 const MENU_CANVAS_CANCEL = 0;
@@ -38,34 +52,72 @@ jQuery(document).ready(function ($) {
                 $.each(itemData.startLinks, function (k, endItemId) {
 
                     if (itemData.type != ITEM_TYPE_QUESTION) {
-                        $('#' + startItemId).find('.b_button_newLine').hide();
+                        $('#' + startItemId + '_item').find('.b_button_newLine').hide();
                     }
 
-                    createLink($('#' + startItemId), $('#' + endItemId));
+                    createLink($('#' + startItemId + '_item'), $('#' + endItemId + '_item'));
                 });
             });
         }
     });
 
+
+    $.each(app.languages, function (key, data) {
+
+        var append = '' +
+            '<div class="form-group">' +
+            '<label class="form-label" for="modalItemEditTextInput_' + key + '">' + data.name + '</label>' +
+            '<textarea class="form-control" rows="1" placeholder="' + data.name + '" id="modalItemEditTextInput_' + key + '"></textarea>' +
+            '</div>';
+
+        $('#modalItemEditText form').append(append);
+    });
+
+
+    $.each(app.scores, function (key, data) {
+
+        var append = '<option value="' + key + '">' + data.name + '</option>';
+        $('#modalItemEditScoreSelected').append(append);
+    });
+
+
     function createItem(itemData, itemId) {
 
         //add each item
-        var append = '<div class="b_item_draggable itemTypeBorder' + itemData.type + '" id="' + itemId + '">';
+        var append;
+        append = '<div class="b_item_draggable itemTypeBorder' + itemData.type + '" id="' + itemId + '_item">';
         append += '<div class="b_item_draggable_header itemTypeBackground' + itemData.type + '">' + types[itemData.type] + '</div>';
-        append += '<div class="b_item_draggable_content">' + itemData.name[app.mainLanguage] + '</div>';
+
+        if (itemData.type == ITEM_TYPE_SCORE_VARIATION) {
+
+            var addScoreClass = 'positiveScore';
+            if (itemData.value < 0) {
+                addScoreClass = 'negativeScore';
+            }
+            //todo class color
+
+            append += '<div class="b_item_draggable_content ' + addScoreClass + '">' + app.scores[itemData.target].name + '<br/><span>' + itemData.value + '</span></div>';
+        }
+        else {
+            append += '<div class="b_item_draggable_content">' + itemData.name[app.mainLanguage] + '</div>';
+        }
+
         append += '<div class="b_button_newLine itemTypeBackground' + itemData.type + '"></div>';
         append += '<div class="b_item_menu_icon"><a href="#"><span class="icon icon-topbarmenu icon-24"></span></a></div>';
         append += '</div>';
         $('#b_canvas').append(append);
-        $('#' + itemId).css({position: 'absolute', top: itemData.yPos, left: itemData.xPos});
+        $('#' + itemId + '_item').css({position: 'absolute', top: itemData.yPos, left: itemData.xPos});
 
     }
 
 
     /******************************* CANVAS MENU *******************************/
 
-        //Open canvas menu
-    $('#b_canvas').on('click', function (e) {
+    //Open canvas menu
+    $('#b_canvas').contextmenu(function (e) {
+
+        e.preventDefault();
+
         var target = e.target;
         if ($(target).attr('id') == 'b_canvas' || $(target).attr('id') == 'b_container_lines') {
             showCanvasMenu(e);
@@ -81,20 +133,42 @@ jQuery(document).ready(function ($) {
         isCanvasMenuOpened = false;
         $('#b_canvas_menu').fadeOut();
 
+        if (thisObjectType == 0) {
+            return;
+        }
+
         var mainLanguage = app.mainLanguage;
 
         var itemId = Object.keys(items).length + 1;
 
-        var position = $('#b_canvas_menu').position();
+        var positionMenu = $('#b_canvas_menu').position();
+        var positionCanvas = $('#b_canvas').position();
+        //var positionCanvasParent = $('#b_canvas').parent().position();
+
+        var parentWidth = 0;
+        if (parseInt($('#b_canvas').parent().css("width")) > parseInt($('#b_canvas').css("width"))) {
+            parentWidth = (parseInt($('#b_canvas').parent().css("width")) - parseInt($('#b_canvas').css("width"))) / 2;
+        }
 
         var itemData = {
             "name": {},
             "type": thisObjectType,
-            "xPos": position.left,
-            "yPos": position.top,
+            "xPos": positionMenu.left - positionCanvas.left - parentWidth,
+            "yPos": positionMenu.top - positionCanvas.top,
             "startLinks": [],
-            "endLinks": []
+            "endLinks": [],
+            "value": "+0",
+            "target": "",
         };
+
+
+        $.each(app.scores, function (key, data) {
+
+            //taking the first score as default
+            itemData.target = key + "";
+            return false;
+        });
+
 
         itemData.name[mainLanguage] = ""; // ¯\_(ツ)_/¯
 
@@ -114,6 +188,8 @@ jQuery(document).ready(function ($) {
         var xPos = e.clientX;
         var yPos = e.clientY;
 
+        $('.menuToActivate').hide();
+
         $('#b_canvas_menu').css({'top': yPos, 'left': xPos});
         $('#b_canvas_menu').fadeIn();
     }
@@ -121,7 +197,7 @@ jQuery(document).ready(function ($) {
 
     /******************************* ITEM MENU *******************************/
 
-        //Open menu of an item
+    //Open menu of an item
     $(document).on('click', '.b_item_menu_icon', function () {
         currentMenuLinkedObject = $(this).parent();
         showItemMenu($(this).parent());
@@ -137,9 +213,11 @@ jQuery(document).ready(function ($) {
         isItemMenuOpened = false;
         $('#b_item_menu').fadeOut();
 
-        var startObjectId = currentMenuLinkedObject.attr('id');
+        var startObjectId = parseInt(currentMenuLinkedObject.attr('id'));
 
         if (thisObjectType == MENU_ITEM_EDIT_TEXT) {
+
+            $('#modalItemEditText').find('.modal-header h3 span').text(types[thisObjectType]);
 
             $.each(items[startObjectId].name, function (key, data) {
                 $('#modalItemEditTextInput_' + key).val(data);
@@ -147,13 +225,24 @@ jQuery(document).ready(function ($) {
 
             $('#modalItemEditText').modal('show');
         }
+        else if (thisObjectType == MENU_ITEM_EDIT_SCORE) {
+
+            $('#modalItemEditScoreInput').val(items[startObjectId].value);
+
+            var target = parseInt(items[startObjectId].target);
+
+            $('#modalItemEditScoreSelected option:eq(' + target + ')').prop('selected', true);
+            $('#modalItemEditScoreSelected option[value="' + target + '"]').prop('selected', 'selected').change();
+
+            $('#modalItemEditScore').modal('show');
+        }
         else if (thisObjectType == MENU_ITEM_REMOVE) {
 
             removeAllItemLinks(startObjectId);
 
             //todo check if it does not have a chance to fire before "removeAllItemLinks" .each functions. it would break everything
             //delete items[startObjectId];
-            $('#' + startObjectId).remove();
+            $('#' + startObjectId + '_item').remove();
         }
         else if (thisObjectType == MENU_ITEM_REMOVE_LINK) {
 
@@ -190,14 +279,15 @@ jQuery(document).ready(function ($) {
 
     /******************************* MODALS *******************************/
 
-        //When submitting a modal
+    //When submitting a modal
     $('.submitModal').on('click', function (e) {
 
         //Modal : Edit text of an item
         if ($(this).attr('data-id') == 'modalItemEditText') { //rather than searching in parent or whatever, in case of changes in the html
 
+
             var object = currentMenuLinkedObject;
-            var objectId = currentMenuLinkedObject.attr('id');
+            var objectId = parseInt(currentMenuLinkedObject.attr('id'));
             var defaultLangText = $('#modalItemEditTextInput_' + app.mainLanguage).val();
 
             if (defaultLangText.length > 140) {
@@ -209,9 +299,24 @@ jQuery(document).ready(function ($) {
             items[objectId].name = [];
             $.each(app.languages, function (key, data) {
 
-                items[objectId].name[data] = $('#modalItemEditTextInput_' + data).val();
-
+                items[objectId].name[key] = $('#modalItemEditTextInput_' + key).val();
             });
+        }
+        else if ($(this).attr('data-id') == 'modalItemEditScore') { //rather than searching in parent or whatever, in case of changes in the html
+
+            var object = currentMenuLinkedObject;
+            var objectId = parseInt(currentMenuLinkedObject.attr('id'));
+
+            var scoreInput = $('#modalItemEditScoreInput').val();
+
+            if (scoreInput.indexOf('+') === -1 && scoreInput.indexOf('-') === -1 && scoreInput != "0") {
+                scoreInput = '+' + scoreInput;
+            }
+
+            $(object).find('.b_item_draggable_content').html(app.scores[$("#modalItemEditScoreSelected").val()].name + '<br/><span>' + scoreInput + '</span>');
+
+            items[objectId].value = scoreInput;
+            items[objectId].target = $("#modalItemEditScoreSelected").val();
         }
     });
 
@@ -289,7 +394,7 @@ jQuery(document).ready(function ($) {
                 }
 
                 if (!isLinkAllowed(startObject, endObject)) {
-                    $('#' + startObjectId).find('.b_button_newLine').show();
+                    $('#' + startObjectId + '_item').find('.b_button_newLine').show();
                 }
                 else {
 
@@ -312,7 +417,7 @@ jQuery(document).ready(function ($) {
         var startObjectId = parseInt($(this).attr('data-startItemId'));
         var endObjectId = parseInt($(this).attr('data-endItemId'));
 
-        $('#' + startObjectId).find('.b_button_newLine').show();
+        $('#' + startObjectId + '_item').find('.b_button_newLine').show();
         removeLink(startObjectId, endObjectId);
     });
 
@@ -363,12 +468,12 @@ jQuery(document).ready(function ($) {
 
                 $.each(items[objectId].startLinks, function (key, data) {
 
-                    createLink($(event.target), $('#' + data));
+                    createLink($(event.target), $('#' + data + '_item'));
                 });
 
                 $.each(items[objectId].endLinks, function (key, data) {
 
-                    createLink($('#' + data), $(event.target));
+                    createLink($('#' + data + '_item'), $(event.target));
                 });
             },
 
@@ -492,10 +597,10 @@ jQuery(document).ready(function ($) {
             removeLink(startObjectId, data);
         });
 
-        $('#' + startObjectId).find('.b_button_newLine').show();
+        $('#' + startObjectId + '_item').find('.b_button_newLine').show();
 
         $.each(endLinks, function (key, data) {
-            $('#' + data).find('.b_button_newLine').show();
+            $('#' + data + '_item').find('.b_button_newLine').show();
             removeLink(data, startObjectId);
         });
     }
@@ -509,16 +614,19 @@ jQuery(document).ready(function ($) {
         var startType = items[startObjectId].type;
         var endType = items[endObjectId].type;
 
-        //a section can only link to a question or.. TODO
-        if (startType == ITEM_TYPE_SECTION && (endType != ITEM_TYPE_QUESTION)) {
+        //a section can only link to a question or..
+        if (startType == ITEM_TYPE_INFO && (endType != ITEM_TYPE_INFO && endType != ITEM_TYPE_QUESTION && endType != ITEM_TYPE_ROUND)) {
+            return false;
+        }
+        else if (startType == ITEM_TYPE_SCORE_VARIATION && (endType != ITEM_TYPE_INFO && endType != ITEM_TYPE_QUESTION && endType != ITEM_TYPE_ROUND)) {
             return false;
         }
         //a question can only link to answers
-        else if (startType == ITEM_TYPE_QUESTION && (endType != ITEM_TYPE_OPTION)) {
+        else if (startType == ITEM_TYPE_QUESTION && (endType != ITEM_TYPE_OPTION_RADIO && endType != ITEM_TYPE_OPTION_CHECKBOX)) {
             return false;
         }
         //an answer can only link to a Section or a Question
-        else if (startType == ITEM_TYPE_OPTION && (endType != ITEM_TYPE_SECTION && endType != ITEM_TYPE_QUESTION)) {
+        else if ((startType == ITEM_TYPE_OPTION_RADIO || startType == ITEM_TYPE_OPTION_CHECKBOX) && (endType != ITEM_TYPE_INFO && endType != ITEM_TYPE_QUESTION && endType != ITEM_TYPE_ROUND && endType != ITEM_TYPE_SCORE_VARIATION )) {
             return false;
         }
         //we don't allow to link an object to itself
@@ -540,8 +648,16 @@ jQuery(document).ready(function ($) {
 
         isItemMenuOpened = true;
 
-        //todo handle TYPE to display special items in the menu
-        //this will change th width of the menu if we add or remove items
+        $('#b_canvas_menu_1').hide();
+        $('#b_canvas_menu_2').hide();
+
+        if (items[parseInt(itemObject.attr('id'))].type == ITEM_TYPE_SCORE_VARIATION) {
+            $('#b_canvas_menu_2').show();
+        }
+        else {
+            $('#b_canvas_menu_1').show();
+        }
+
 
         var xPos = itemObject.position().left + itemObject.outerWidth();
         var yPos = itemObject.position().top;
