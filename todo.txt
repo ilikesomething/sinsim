@@ -6,8 +6,6 @@
 
 - TODO :
 
-    - Disable drag button if not lined to a parent / display if linked
-
     Section > Step info
     Question > Step question ect..
     Every type should have a possibility to add a resource  (image video) along with the  text

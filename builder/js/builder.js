@@ -49,11 +49,15 @@ jQuery(document).ready(function ($) {
             //when all items are added, we add the links between them
             $.each(items, function (startItemId, itemData) {
 
-                $.each(itemData.startLinks, function (k, endItemId) {
+                if (itemData.startLinks.length == 0) {
+                    $('#' + startItemId + '_item').find('.b_button_newLine').show();
+                }
 
-                    if (itemData.type != ITEM_TYPE_QUESTION) {
-                        $('#' + startItemId + '_item').find('.b_button_newLine').hide();
-                    }
+                if (itemData.type == ITEM_TYPE_QUESTION) {
+                    $('#' + startItemId + '_item').find('.b_button_newLine').show();
+                }
+
+                $.each(itemData.startLinks, function (k, endItemId) {
 
                     createLink($('#' + startItemId + '_item'), $('#' + endItemId + '_item'));
                 });
@@ -94,7 +98,6 @@ jQuery(document).ready(function ($) {
             if (itemData.value < 0) {
                 addScoreClass = 'negativeScore';
             }
-            //todo class color
 
             append += '<div class="b_item_draggable_content ' + addScoreClass + '">' + app.scores[itemData.target].name + '<br/><span>' + itemData.value + '</span></div>';
         }
@@ -175,6 +178,8 @@ jQuery(document).ready(function ($) {
         items[itemId] = itemData;
         createItem(itemData, itemId);
 
+        $('#' + itemId + '_item').find('.b_button_newLine').show();
+
         draggableRefreshItem(); // ¯\_(ツ)_/¯
         draggableRefreshButtonNewLine(); // ¯\_(ツ)_/¯
         droppableRefreshItem(); // ¯\_(ツ)_/¯
@@ -198,7 +203,8 @@ jQuery(document).ready(function ($) {
     /******************************* ITEM MENU *******************************/
 
     //Open menu of an item
-    $(document).on('click', '.b_item_menu_icon', function () {
+    $(document).on('click', '.b_item_menu_icon', function (e) {
+        e.preventDefault();
         currentMenuLinkedObject = $(this).parent();
         showItemMenu($(this).parent());
     });
@@ -217,7 +223,7 @@ jQuery(document).ready(function ($) {
 
         if (thisObjectType == MENU_ITEM_EDIT_TEXT) {
 
-            $('#modalItemEditText').find('.modal-header h3 span').text(types[thisObjectType]);
+            $('#modalItemEditText').find('.modal-header h3 span').text(types[items[startObjectId].type]);
 
             $.each(items[startObjectId].name, function (key, data) {
                 $('#modalItemEditTextInput_' + key).val(data);
@@ -241,7 +247,7 @@ jQuery(document).ready(function ($) {
             removeAllItemLinks(startObjectId);
 
             //todo check if it does not have a chance to fire before "removeAllItemLinks" .each functions. it would break everything
-            //delete items[startObjectId];
+            delete items[startObjectId];
             $('#' + startObjectId + '_item').remove();
         }
         else if (thisObjectType == MENU_ITEM_REMOVE_LINK) {
@@ -296,7 +302,7 @@ jQuery(document).ready(function ($) {
 
             $(object).find('.b_item_draggable_content').text(defaultLangText);
 
-            items[objectId].name = [];
+
             $.each(app.languages, function (key, data) {
 
                 items[objectId].name[key] = $('#modalItemEditTextInput_' + key).val();
@@ -312,6 +318,18 @@ jQuery(document).ready(function ($) {
             if (scoreInput.indexOf('+') === -1 && scoreInput.indexOf('-') === -1 && scoreInput != "0") {
                 scoreInput = '+' + scoreInput;
             }
+
+
+            $(object).find('.b_item_draggable_content').removeClass('positiveScore');
+            $(object).find('.b_item_draggable_content').removeClass('negativeScore');
+
+            var addScoreClass = 'positiveScore';
+            if (scoreInput < 0) {
+                addScoreClass = 'negativeScore';
+            }
+
+            $(object).find('.b_item_draggable_content').addClass(addScoreClass);
+
 
             $(object).find('.b_item_draggable_content').html(app.scores[$("#modalItemEditScoreSelected").val()].name + '<br/><span>' + scoreInput + '</span>');
 
@@ -401,11 +419,15 @@ jQuery(document).ready(function ($) {
                     items[startObjectId].startLinks.push(endObjectId);
                     items[endObjectId].endLinks.push(startObjectId);
 
-                    if (items[startObjectId].type != ITEM_TYPE_QUESTION) {
-                        $(ui.draggable).hide();
+                    createLink(startObject, endObject);
+
+                    if (items[startObjectId].startLinks.length > 0 && items[startObjectId].type != ITEM_TYPE_QUESTION) {
+                        $('#' + startObjectId + '_item').find('.b_button_newLine').hide();
                     }
 
-                    createLink(startObject, endObject);
+                    if (items[endObjectId].startLinks.length == 0 || items[endObjectId].type == ITEM_TYPE_QUESTION) {
+                        $('#' + endObjectId + '_item').find('.b_button_newLine').show();
+                    }
                 }
             }
         });
@@ -584,6 +606,14 @@ jQuery(document).ready(function ($) {
         var endLink = items[endObjectId].endLinks.indexOf(parseInt(startObjectId));
         if (endLink > -1) {
             items[endObjectId].endLinks.splice(endLink, 1);
+        }
+
+        if (items[startObjectId].startLinks.length == 0) {
+            $('#' + startObjectId + '_item').find('.b_button_newLine').show();
+        }
+
+        if (items[startObjectId].type == ITEM_TYPE_QUESTION) {
+            $('#' + startObjectId + '_item').find('.b_button_newLine').show();
         }
     }
 

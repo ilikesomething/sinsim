@@ -10,15 +10,15 @@ html, body, .container {
     display: block;
     position: relative;
     width: 1000px;
-    height: 96%;
+    height: 2000px;
     border: 1px dotted #f9bcd0;
     margin: 0 auto;
     background-color: #FDF6F8;
     -webkit-border-radius: 5px;
     -moz-border-radius: 5px;
     border-radius: 5px;
-    resize: vertical;
-    overflow: auto;
+    /*resize: vertical;
+    overflow: auto;*/
 }
 
 #b_container_lines {
@@ -160,6 +160,7 @@ html, body, .container {
 
 .b_button_newLine {
     position: absolute;
+    display: none;
     width: 16px;
     height: 16px;
     border-radius: 4px;
