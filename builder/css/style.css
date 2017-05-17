@@ -213,3 +213,15 @@ html, body, .container {
     right: 0px;
     z-index: 9999;
 }
+
+#jsonDisplay {
+    border:1px solid palevioletred;
+    font-size:10px;
+    display: block;
+    position: relative;
+    height: 100px;
+    width: 900px;
+    margin: 0 auto;
+
+    overflow-y: scroll;
+}

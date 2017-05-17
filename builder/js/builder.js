@@ -176,6 +176,7 @@ jQuery(document).ready(function ($) {
         itemData.name[mainLanguage] = ""; // ¯\_(ツ)_/¯
 
         items[itemId] = itemData;
+        updateJsonDisplay();
         createItem(itemData, itemId);
 
         $('#' + itemId + '_item').find('.b_button_newLine').show();
@@ -248,6 +249,7 @@ jQuery(document).ready(function ($) {
 
             //todo check if it does not have a chance to fire before "removeAllItemLinks" .each functions. it would break everything
             delete items[startObjectId];
+            updateJsonDisplay();
             $('#' + startObjectId + '_item').remove();
         }
         else if (thisObjectType == MENU_ITEM_REMOVE_LINK) {
@@ -307,6 +309,7 @@ jQuery(document).ready(function ($) {
 
                 items[objectId].name[key] = $('#modalItemEditTextInput_' + key).val();
             });
+            updateJsonDisplay();
         }
         else if ($(this).attr('data-id') == 'modalItemEditScore') { //rather than searching in parent or whatever, in case of changes in the html
 
@@ -335,6 +338,7 @@ jQuery(document).ready(function ($) {
 
             items[objectId].value = scoreInput;
             items[objectId].target = $("#modalItemEditScoreSelected").val();
+            updateJsonDisplay();
         }
     });
 
@@ -418,6 +422,8 @@ jQuery(document).ready(function ($) {
 
                     items[startObjectId].startLinks.push(endObjectId);
                     items[endObjectId].endLinks.push(startObjectId);
+
+                    updateJsonDisplay();
 
                     createLink(startObject, endObject);
 
@@ -506,6 +512,7 @@ jQuery(document).ready(function ($) {
 
                 items[objectId].xPos = object.position().left;
                 items[objectId].yPos = object.position().top;
+                updateJsonDisplay();
             },
         });
     }
@@ -601,11 +608,13 @@ jQuery(document).ready(function ($) {
         var startLink = items[startObjectId].startLinks.indexOf(parseInt(endObjectId));
         if (startLink > -1) {
             items[startObjectId].startLinks.splice(startLink, 1);
+            updateJsonDisplay();
         }
         //we remove the end data of the link
         var endLink = items[endObjectId].endLinks.indexOf(parseInt(startObjectId));
         if (endLink > -1) {
             items[endObjectId].endLinks.splice(endLink, 1);
+            updateJsonDisplay();
         }
 
         if (items[startObjectId].startLinks.length == 0) {
@@ -695,4 +704,11 @@ jQuery(document).ready(function ($) {
         $('#b_item_menu').css({'top': yPos, 'left': xPos});
         $('#b_item_menu').fadeIn();
     }
+
+    function updateJsonDisplay(){
+
+        $('#jsonDisplay').text(JSON.stringify(items));
+    }
+
+    updateJsonDisplay();
 });

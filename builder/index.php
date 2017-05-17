@@ -27,8 +27,12 @@
         <button class="icon icon-action-share-on object-right"><span></span></button>
     </div>
 </header>
+<div class="container">
 
-<div class="container padding-top-60"><p class="text-center">Right click on the canvas to create a new item</p>
+    <p class="text-center">JSON live output</p>
+    <div id="jsonDisplay"></div>
+
+    <p class="text-center">Right click on the canvas to create a new item</p>
     <div id="b_canvas">
         <svg id="b_container_lines"></svg>
         <div id="b_item_menu">
